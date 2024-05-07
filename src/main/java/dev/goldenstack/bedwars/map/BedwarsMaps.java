@@ -15,16 +15,19 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Bedwars map constants and util functions.
  */
 public final class BedwarsMaps {
 
-    private BedwarsMaps() {}
+    private BedwarsMaps() {
+    }
 
     /**
      * Creates an instance for a map.
+     *
      * @param map the map to load
      * @return the instance containing the map, relevant beds, etc.
      */
@@ -92,6 +95,16 @@ public final class BedwarsMaps {
                     new BedwarsMap.Generator(new Vec(-6.5, 65, 14.5), BedwarsMap.Generator.Type.EMERALD),
                     new BedwarsMap.Generator(new Vec(3.5, 87, -6.5), BedwarsMap.Generator.Type.EMERALD),
                     new BedwarsMap.Generator(new Vec(3.5, 87, 7.5), BedwarsMap.Generator.Type.EMERALD)
+            ),
+            Set.of(
+                    new Pos(-16.5, 65, -88, 90, 0),
+                    new Pos(34.5, 65, -88, 90, 0),
+                    new Pos(92, 65, -19.5, 180, 0),
+                    new Pos(92, 65, 31.5, 180, 0),
+                    new Pos(23.5, 65, 89, 270, 0),
+                    new Pos(-27.5, 65, 89, 270, 0),
+                    new Pos(-85, 65, 20.5, 360, 0),
+                    new Pos(-85, 65, -30.5, 360, 0)
             )
     );
 

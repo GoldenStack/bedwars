@@ -30,12 +30,12 @@ public final class Teams {
      * @param position the bed position of the team
      */
     public static void placeBed(@NotNull Instance instance, @NotNull Team team, @NotNull BedwarsMap.BedPosition position) {
-        Block foot = Teams.getBed(team).withProperties(Map.of(
+        Block foot = Teams.data(team).bed().withProperties(Map.of(
                 "part", "foot",
                 "facing", position.direction().toString().toLowerCase(Locale.ROOT)
         )).withTag(TEAM, team).withTag(IS_BED, true);
 
-        Block head = Teams.getBed(team).withProperties(Map.of(
+        Block head = Teams.data(team).bed().withProperties(Map.of(
                 "part", "head",
                 "facing", position.direction().toString().toLowerCase(Locale.ROOT)
         )).withTag(TEAM, team).withTag(IS_BED, true);
@@ -46,68 +46,27 @@ public final class Teams {
         instance.setBlock(position.point().add(dir.normalX(), dir.normalY(), dir.normalZ()), head);
     }
 
-    /**
-     * Gets the bed block that represents the given team.
-     */
-    public static @NotNull Block getBed(@NotNull Team team) {
-        return switch (team) {
-            case RED -> Block.RED_BED;
-            case BLUE -> Block.BLUE_BED;
-            case GREEN -> Block.LIME_BED;
-            case YELLOW -> Block.YELLOW_BED;
-            case CYAN -> Block.CYAN_BED;
-            case WHITE -> Block.WHITE_BED;
-            case PINK -> Block.PINK_BED;
-            case GRAY -> Block.GRAY_BED;
-        };
+    public record TeamData(@NotNull String name,
+                           @NotNull NamedTextColor color,
+                           @NotNull Block bed,
+                           @NotNull Material wool,
+                           @NotNull Material concrete,
+                           @NotNull Material glass) {
     }
 
-    /**
-     * Gets the wool block that represents the given team.
-     */
-    public static @NotNull Material getWool(@NotNull Team team) {
-        return switch (team) {
-            case RED -> Material.RED_WOOL;
-            case BLUE -> Material.BLUE_WOOL;
-            case GREEN -> Material.LIME_WOOL;
-            case YELLOW -> Material.YELLOW_WOOL;
-            case CYAN -> Material.CYAN_WOOL;
-            case WHITE -> Material.WHITE_WOOL;
-            case PINK -> Material.PINK_WOOL;
-            case GRAY -> Material.GRAY_WOOL;
-        };
-    }
+    private static final @NotNull Map<Team, TeamData> DATA = Map.of(
+            Team.RED, new TeamData("Red", NamedTextColor.RED, Block.RED_BED, Material.RED_WOOL, Material.RED_CONCRETE, Material.RED_STAINED_GLASS),
+            Team.BLUE, new TeamData("Blue", NamedTextColor.BLUE, Block.BLUE_BED, Material.BLUE_WOOL, Material.BLUE_CONCRETE, Material.BLUE_STAINED_GLASS),
+            Team.GREEN, new TeamData("Green", NamedTextColor.GREEN, Block.LIME_BED, Material.LIME_WOOL, Material.LIME_CONCRETE, Material.LIME_STAINED_GLASS),
+            Team.YELLOW, new TeamData("Yellow", NamedTextColor.YELLOW, Block.YELLOW_BED, Material.YELLOW_WOOL, Material.YELLOW_CONCRETE, Material.YELLOW_STAINED_GLASS),
+            Team.CYAN, new TeamData("Cyan", NamedTextColor.AQUA, Block.CYAN_BED, Material.CYAN_WOOL, Material.CYAN_CONCRETE, Material.CYAN_STAINED_GLASS),
+            Team.WHITE, new TeamData("White", NamedTextColor.WHITE, Block.WHITE_BED, Material.WHITE_WOOL, Material.WHITE_CONCRETE, Material.WHITE_STAINED_GLASS),
+            Team.PINK, new TeamData("Pink", NamedTextColor.LIGHT_PURPLE, Block.PINK_BED, Material.PINK_WOOL, Material.PINK_CONCRETE, Material.PINK_STAINED_GLASS),
+            Team.GRAY, new TeamData("Gray", NamedTextColor.GRAY, Block.GRAY_BED, Material.GRAY_WOOL, Material.GRAY_CONCRETE, Material.GRAY_STAINED_GLASS)
+    );
 
-    /**
-     * Gets the color that represents the given team.
-     */
-    public static @NotNull NamedTextColor getColor(@NotNull Team team) {
-        return switch (team) {
-            case RED -> NamedTextColor.RED;
-            case BLUE -> NamedTextColor.BLUE;
-            case GREEN -> NamedTextColor.GREEN;
-            case YELLOW -> NamedTextColor.YELLOW;
-            case CYAN -> NamedTextColor.DARK_AQUA;
-            case WHITE -> NamedTextColor.WHITE;
-            case PINK -> NamedTextColor.LIGHT_PURPLE;
-            case GRAY -> NamedTextColor.GRAY;
-        };
-    }
-
-    /**
-     * Gets the name that represents the given team.
-     */
-    public static @NotNull String getName(@NotNull Team team) {
-        return switch (team) {
-            case RED -> "Red";
-            case BLUE -> "Blue";
-            case GREEN -> "Green";
-            case YELLOW -> "Yellow";
-            case CYAN -> "Cyan";
-            case WHITE -> "White";
-            case PINK -> "Pink";
-            case GRAY -> "Gray";
-        };
+    public static @NotNull TeamData data(@NotNull Team team) {
+        return DATA.get(team);
     }
 
 }

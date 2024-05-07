@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A bedwars map.
@@ -25,7 +26,8 @@ public record BedwarsMap(@NotNull String name,
                          @NotNull Pos globalSpawn,
                          @NotNull Map<Team, BedPosition> beds,
                          @NotNull Map<Team, Pos> spawns,
-                         @NotNull List<Generator> generators) {
+                         @NotNull List<Generator> generators,
+                         @NotNull Set<Pos> shopkeepers) {
     /**
      * The position of a team's bed.
      * @param point the block of the foot of the bed
