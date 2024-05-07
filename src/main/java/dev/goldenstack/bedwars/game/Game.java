@@ -22,11 +22,9 @@ import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A Bedwars game.
@@ -40,11 +38,21 @@ public class Game {
      */
     public static final @NotNull Tag<Game> GAME = Tag.UUID("Game").map(GAMES::get, Game::getUuid);
 
+    public enum State {
+        LOBBY,
+        START,
+        END
+    }
+
     private final @NotNull UUID uuid;
     private final @NotNull BedwarsMap map;
     private final @NotNull Instance instance;
 
     private final @NotNull Set<Team> aliveTeams;
+
+    private final @NotNull Map<Team, Set<UUID>> teams;
+
+    private State state;
 
     public Game(@NotNull BedwarsMap map) {
         this.uuid = UUID.randomUUID();
@@ -53,10 +61,38 @@ public class Game {
 
         this.aliveTeams = new HashSet<>(Set.of(Team.values()));
 
+        this.teams = new HashMap<>();
+        aliveTeams.forEach(team -> teams.put(team, new HashSet<>()));
+
         GAMES.put(uuid, this);
         instance.setTag(GAME, this);
 
+        this.state = State.LOBBY;
+
         registerEvents();
+    }
+
+    public void handlePlayerJoin(@NotNull Player player) {
+        player.setRespawnPoint(getMap().globalSpawn());
+    }
+
+    public void handlePlayerAdd(@NotNull Player player) {
+        Set<Player> players = instance.getPlayers();
+
+        if (players.size() >= 1 && state == State.LOBBY) {
+            this.state = State.START;
+            for (Player user : players) {
+                // Results in incorrect team distribution
+                Team team = Team.values()[ThreadLocalRandom.current().nextInt(Team.values().length)];
+
+                user.setTag(Teams.TEAM, team);
+                teams.get(team).add(user.getUuid());
+
+                player.setRespawnPoint(map.spawns().get(team));
+                player.teleport(map.spawns().get(team));
+                handlePlayerSpawn(player);
+            }
+        }
     }
 
     /**
