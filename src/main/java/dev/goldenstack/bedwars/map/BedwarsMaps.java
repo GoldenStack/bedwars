@@ -5,10 +5,10 @@ import dev.goldenstack.bedwars.team.Teams;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.instance.AnvilLoader;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.LightingChunk;
+import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ public final class BedwarsMaps {
 
         instance.enableAutoChunkLoad(true);
 
-        instance.setChunkLoader(new AnvilLoader(Path.of("maps", "Lighthouse")));
+        instance.setChunkLoader(new AnvilLoader(map.worldFile()));
 
         for (var entry : map.beds().entrySet()) {
             Teams.placeBed(instance, entry.getKey(), entry.getValue());
