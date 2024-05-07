@@ -1,5 +1,6 @@
 package dev.goldenstack.bedwars.team;
 
+import dev.goldenstack.bedwars.map.BedwarsMap;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
@@ -28,7 +29,7 @@ public final class Teams {
      * @param team the team that owns the bed
      * @param position the bed position of the team
      */
-    public static void placeBed(@NotNull Instance instance, @NotNull Team team, @NotNull Team.BedPosition position) {
+    public static void placeBed(@NotNull Instance instance, @NotNull Team team, @NotNull BedwarsMap.BedPosition position) {
         Block foot = Teams.getBed(team).withProperties(Map.of(
                 "part", "foot",
                 "facing", position.direction().toString().toLowerCase(Locale.ROOT)

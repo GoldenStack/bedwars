@@ -9,19 +9,27 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
+import net.minestom.server.entity.ItemEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
+import net.minestom.server.event.instance.InstanceTickEvent;
+import net.minestom.server.event.item.ItemDropEvent;
+import net.minestom.server.event.item.PickupItemEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.inventory.TransactionOption;
 import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.Direction;
+import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -106,7 +114,7 @@ public class Game {
         player.sendPacket(new ChangeGameStatePacket(ChangeGameStatePacket.Reason.ENABLE_RESPAWN_SCREEN, 1));
 
         player.getInventory().clear();
-        player.getInventory().addItemStack(ItemStack.of(Teams.getWool(player.getTag(Teams.TEAM)), 32));
+        player.getInventory().addItemStack(ItemStack.of(Teams.getWool(player.getTag(Teams.TEAM)), 128));
 
         boolean teamAlive = getAliveTeams().contains(team);
 
@@ -161,7 +169,38 @@ public class Game {
             if (event.getNewPosition().y() <= 0) {
                 event.getPlayer().damage(DamageType.OUT_OF_WORLD, Float.MAX_VALUE);
             }
+        }).addListener(InstanceTickEvent.class, event -> {
+            long age = instance.getWorldAge();
+
+            for (var generator : map.generators()) {
+                switch (generator.type()) {
+                    case ISLAND -> {
+                        if (age % (20 * 1) == 0) new ItemEntity(ItemStack.of(Material.IRON_INGOT)).setInstance(instance, generator.pos());
+                        if (age % (20 * 5) == 0) new ItemEntity(ItemStack.of(Material.GOLD_INGOT)).setInstance(instance, generator.pos());
+                    }
+                    case DIAMOND -> {
+                        if (age % (20 * 15) == 0) new ItemEntity(ItemStack.of(Material.DIAMOND)).setInstance(instance, generator.pos());
+                    }
+                    case EMERALD -> {
+                        if (age % (20 * 60) == 0) new ItemEntity(ItemStack.of(Material.EMERALD)).setInstance(instance, generator.pos());
+                    }
+                }
+            }
+        }).addListener(PickupItemEvent.class, event -> {
+            if (event.getEntity() instanceof Player player) {
+                ItemStack result = player.getInventory().addItemStack(event.getItemStack(), TransactionOption.ALL);
+                if (!result.isAir()) {
+                    event.setCancelled(true);
+                    event.getItemEntity().setItemStack(result);
+                }
+            }
+        }).addListener(ItemDropEvent.class, event -> {
+            ItemEntity itemEntity = new ItemEntity(event.getItemStack());
+            itemEntity.setPickupDelay(Duration.of(10, TimeUnit.SERVER_TICK));
+            itemEntity.setVelocity(event.getPlayer().getPosition().direction().mul(6));
+            itemEntity.setInstance(event.getPlayer().getInstance(), event.getPlayer().getPosition().add(0, event.getPlayer().getEyeHeight()*0.75, 0));
         });
+
     }
 
     public @NotNull UUID getUuid() {
