@@ -6,6 +6,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -32,5 +33,14 @@ public record ShopItem(@NotNull String name, @NotNull Function<Player, ItemStack
     public static @NotNull ShopItem constant(@NotNull String name, @NotNull ItemStack item, @NotNull ItemStack cost) {
         return new ShopItem(name, player -> item, cost);
     }
+
+    /**
+     * A tab in the GUI.
+     * These are different from pages in that they're always visible, and you can directly skip between any two.
+     * @param name the name of the tab (used internally)
+     * @param icon the icon of the tab
+     * @param items the shop items contained within the tab
+     */
+    public record Tab(@NotNull String name, @NotNull ItemStack icon, @NotNull List<ShopItem> items) {}
 
 }

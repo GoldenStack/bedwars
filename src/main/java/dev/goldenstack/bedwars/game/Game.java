@@ -94,7 +94,7 @@ public class Game {
 
         for (var position : map.shopkeepers()) {
             Shopkeeper shopkeeper = new Shopkeeper("Shopkeeper", SKIN, false,
-                    player -> player.openInventory(ShopItems.renderInventory(player)));
+                    player -> player.openInventory(ShopItems.renderInventory(ShopItems.TABS.get(0), player)));
             shopkeeper.setInstance(instance, position);
         }
     }
@@ -229,6 +229,8 @@ public class Game {
             if (!event.getInventory().hasTag(ShopItems.SHOP_INVENTORY)) return;
             if (event.getPlayer().getTag(GAME) != this) return;
 
+            Player player = event.getPlayer();
+
             event.setCancelled(true);
 
             int slot = switch (event.getClickInfo()) {
@@ -243,9 +245,14 @@ public class Game {
             if (slot == -1 || slot >= event.getInventory().getSize()) return;
 
             ShopItem item = event.getInventory().getItemStack(slot).getTag(ShopItems.ITEM_ID);
-            if (item == null) return;
+            if (item == null) {
+                ShopItem.Tab tab = event.getInventory().getItemStack(slot).getTag(ShopItems.TAB_ID);
+                if (tab != null) {
+                    player.openInventory(ShopItems.renderInventory(tab, player));
+                }
 
-            Player player = event.getPlayer();
+                return;
+            }
 
             if (player.getInventory().takeItemStack(item.cost(), TransactionOption.ALL_OR_NOTHING)) {
                 ItemStack result = player.getInventory().addItemStack(item.item().apply(player), TransactionOption.ALL);
