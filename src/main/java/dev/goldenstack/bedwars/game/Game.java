@@ -28,8 +28,10 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.inventory.TransactionOption;
 import net.minestom.server.inventory.click.Click;
+import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.item.component.DyedItemColor;
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.Direction;
@@ -139,6 +141,47 @@ public class Game {
         boolean teamAlive = getAliveTeams().contains(team);
 
         player.setGameMode(teamAlive ? GameMode.SURVIVAL : GameMode.SPECTATOR);
+
+        Map<String, Integer> itemTiers = new HashMap<>(player.getTag(ShopItems.ITEM_TIERS));
+
+        // Reduce tiers
+        for (var reduced : List.of("axe", "pickaxe")) {
+            itemTiers.computeIfPresent(reduced, (name, tier) -> Math.max(0, tier - 1));
+        }
+        player.setTag(ShopItems.ITEM_TIERS, Map.copyOf(itemTiers));
+
+        // Tools
+
+        if (itemTiers.getOrDefault("shears", 0) == 1) {
+            player.getInventory().addItemStack(ItemStack.of(Material.SHEARS));
+        }
+
+        int axe = itemTiers.getOrDefault("axe", 0);
+        if (axe > 0) {
+            ShopItems.AXES.get(axe - 1).boughtTrigger().accept(player);
+        }
+
+        int pickaxe = itemTiers.getOrDefault("pickaxe", 0);
+        if (pickaxe > 0) {
+            ShopItems.PICKAXES.get(axe - 1).boughtTrigger().accept(player);
+        }
+
+        // Apply armor
+        DyedItemColor color = new DyedItemColor(Teams.data(team).color());
+
+        player.setHelmet(ItemStack.of(Material.LEATHER_HELMET).with(ItemComponent.DYED_COLOR, color));
+        player.setChestplate(ItemStack.of(Material.LEATHER_CHESTPLATE).with(ItemComponent.DYED_COLOR, color));
+
+        switch (player.getTag(ShopItems.ARMOR)) {
+            case "leather" -> {
+                player.setLeggings(ItemStack.of(Material.LEATHER_LEGGINGS).with(ItemComponent.DYED_COLOR, color));
+                player.setBoots(ItemStack.of(Material.LEATHER_BOOTS).with(ItemComponent.DYED_COLOR, color));
+            }
+            case "chainmail" -> ShopItems.nameToItem("chainmail_armor").getter().apply(player).boughtTrigger().accept(player);
+            case "iron" -> ShopItems.nameToItem("iron_armor").getter().apply(player).boughtTrigger().accept(player);
+            case "diamond" -> ShopItems.nameToItem("diamond_armor").getter().apply(player).boughtTrigger().accept(player);
+        }
+
     }
 
     /**
@@ -244,7 +287,7 @@ public class Game {
             // Limit the click to only slots within the shop
             if (slot == -1 || slot >= event.getInventory().getSize()) return;
 
-            ShopItem item = event.getInventory().getItemStack(slot).getTag(ShopItems.ITEM_ID);
+            ShopItem.Generator item = event.getInventory().getItemStack(slot).getTag(ShopItems.ITEM_ID);
             if (item == null) {
                 ShopItem.Tab tab = event.getInventory().getItemStack(slot).getTag(ShopItems.TAB_ID);
                 if (tab != null) {
@@ -254,13 +297,15 @@ public class Game {
                 return;
             }
 
-            if (player.getInventory().takeItemStack(item.cost(), TransactionOption.ALL_OR_NOTHING)) {
-                ItemStack result = player.getInventory().addItemStack(item.item().apply(player), TransactionOption.ALL);
+            ShopItem shop = item.getter().apply(player);
+            if (shop == null) return;
 
-                if (!result.isAir()) {
-                    player.dropItem(result);
-                }
+            if (player.getInventory().takeItemStack(shop.cost(), TransactionOption.ALL_OR_NOTHING)) {
+                shop.boughtTrigger().accept(player);
             }
+
+            // Update inventory by reopening
+            player.openInventory(ShopItems.renderInventory(event.getInventory().getTag(ShopItems.TAB_ID), player));
         });
 
     }

@@ -2,6 +2,7 @@ package dev.goldenstack.bedwars.team;
 
 import dev.goldenstack.bedwars.map.BedwarsMap;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
@@ -47,7 +48,7 @@ public final class Teams {
     }
 
     public record TeamData(@NotNull String name,
-                           @NotNull NamedTextColor color,
+                           @NotNull TextColor color,
                            @NotNull Block bed,
                            @NotNull Material wool,
                            @NotNull Material concrete,

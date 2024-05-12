@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 
 /**
@@ -28,9 +29,27 @@ public class ShopItems {
 
     public static final @NotNull Tag<Boolean> SHOP_INVENTORY = Tag.Boolean("ShopInventory");
 
-    public static final @NotNull Tag<ShopItem> ITEM_ID = Tag.String("ShopItemId").map(ShopItems::nameToItem, ShopItem::name);
+    public static final @NotNull Tag<ShopItem.Generator> ITEM_ID = Tag.String("ShopItemId").map(ShopItems::nameToItem, ShopItem.Generator::name);
 
     public static final @NotNull Tag<ShopItem.Tab> TAB_ID = Tag.String("ShopTabId").map(ShopItems::nameToTab, ShopItem.Tab::name);
+
+    public static final @NotNull Tag<Map<String, Integer>> ITEM_TIERS = Tag.<Map<String, Integer>>Transient("ItemTiers").defaultValue(Map::of);
+
+    public static final @NotNull Tag<String> ARMOR = Tag.String("Armor").defaultValue("leather");
+
+    public static final @NotNull List<ShopItem> AXES = List.of(
+            new ShopItem(ItemStack.of(Material.WOODEN_AXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 1)), ItemStack.of(Material.IRON_INGOT, 10)),
+            new ShopItem(ItemStack.of(Material.STONE_AXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 1)), ItemStack.of(Material.IRON_INGOT, 10)),
+            new ShopItem(ItemStack.of(Material.IRON_AXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 2)), ItemStack.of(Material.GOLD_INGOT, 3)),
+            new ShopItem(ItemStack.of(Material.DIAMOND_AXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 3)), ItemStack.of(Material.GOLD_INGOT, 6))
+    );
+
+    public static final @NotNull List<ShopItem> PICKAXES = List.of(
+            new ShopItem(ItemStack.of(Material.WOODEN_PICKAXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 1)), ItemStack.of(Material.IRON_INGOT, 10)),
+            new ShopItem(ItemStack.of(Material.IRON_PICKAXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 2)), ItemStack.of(Material.IRON_INGOT, 10)),
+            new ShopItem(ItemStack.of(Material.GOLDEN_PICKAXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 3).with(Enchantment.SHARPNESS, 2)), ItemStack.of(Material.GOLD_INGOT, 3)),
+            new ShopItem(ItemStack.of(Material.DIAMOND_PICKAXE).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.EFFICIENCY, 3)), ItemStack.of(Material.GOLD_INGOT, 6))
+    );
 
     public static final @NotNull List<ShopItem.Tab> TABS = List.of(
             new ShopItem.Tab(
@@ -60,18 +79,56 @@ public class ShopItems {
                     "armor",
                     ItemStack.of(Material.CHAINMAIL_BOOTS).with(ItemComponent.ITEM_NAME, Component.text("Armor", NamedTextColor.GREEN)).without(ItemComponent.ATTRIBUTE_MODIFIERS),
                     List.of(
+                            ShopItem.once("chainmail_armor", new ShopItem(
+                                    ItemStack.of(Material.CHAINMAIL_BOOTS).with(ItemComponent.ITEM_NAME, Component.text("Permanent Chainmail Armor")),
+                                    ItemStack.of(Material.IRON_INGOT, 30),
+                                    player -> {
+                                        if (!player.getTag(ARMOR).equals("leather")) return;
+
+                                        player.setLeggings(ItemStack.of(Material.CHAINMAIL_LEGGINGS));
+                                        player.setBoots(ItemStack.of(Material.CHAINMAIL_BOOTS));
+                                        player.setTag(ARMOR, "chainmail");
+                                    }
+                            )),
+                            ShopItem.once("iron_armor", new ShopItem(
+                                    ItemStack.of(Material.IRON_BOOTS).with(ItemComponent.ITEM_NAME, Component.text("Permanent Iron Armor")),
+                                    ItemStack.of(Material.GOLD_INGOT, 12),
+                                    player -> {
+                                        if (player.getTag(ARMOR).equals("diamond")) return;
+
+                                        player.setLeggings(ItemStack.of(Material.IRON_LEGGINGS));
+                                        player.setBoots(ItemStack.of(Material.IRON_BOOTS));
+                                        player.setTag(ARMOR, "iron");
+                                    }
+                            )),
+                            ShopItem.once("diamond_armor", new ShopItem(
+                                    ItemStack.of(Material.DIAMOND_BOOTS).with(ItemComponent.ITEM_NAME, Component.text("Permanent Diamond Armor")),
+                                    ItemStack.of(Material.EMERALD, 6),
+                                    player -> {
+                                        player.setLeggings(ItemStack.of(Material.DIAMOND_LEGGINGS));
+                                        player.setBoots(ItemStack.of(Material.DIAMOND_BOOTS));
+                                        player.setTag(ARMOR, "diamond");
+                                    }
+                            ))
                     )
             ),
             new ShopItem.Tab(
                     "tools",
                     ItemStack.of(Material.STONE_PICKAXE).with(ItemComponent.ITEM_NAME, Component.text("Tools", NamedTextColor.GREEN)).without(ItemComponent.ATTRIBUTE_MODIFIERS),
                     List.of(
+                            ShopItem.once("shears", new ShopItem(ItemStack.of(Material.SHEARS), ItemStack.of(Material.IRON_INGOT, 20))),
+                            ShopItem.tiered("axe", AXES),
+                            ShopItem.tiered("pickaxe", PICKAXES)
                     )
             ),
             new ShopItem.Tab(
                     "ranged",
                     ItemStack.of(Material.BOW).with(ItemComponent.ITEM_NAME, Component.text("Ranged", NamedTextColor.GREEN)).without(ItemComponent.ATTRIBUTE_MODIFIERS),
                     List.of(
+                            ShopItem.constant("arrows", ItemStack.of(Material.ARROW, 6), ItemStack.of(Material.GOLD_INGOT, 2)),
+                            ShopItem.constant("bow", ItemStack.of(Material.BOW, 1), ItemStack.of(Material.GOLD_INGOT, 12)),
+                            ShopItem.constant("power_bow", ItemStack.of(Material.BOW, 1).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.POWER, 1)), ItemStack.of(Material.GOLD_INGOT, 20)),
+                            ShopItem.constant("power_punch_bow", ItemStack.of(Material.BOW, 1).with(ItemComponent.ENCHANTMENTS, EnchantmentList.EMPTY.with(Enchantment.POWER, 1).with(Enchantment.PUNCH, 1)), ItemStack.of(Material.EMERALD, 6))
                     )
             ),
             new ShopItem.Tab(
@@ -84,6 +141,10 @@ public class ShopItems {
                     "utility",
                     ItemStack.of(Material.TNT).with(ItemComponent.ITEM_NAME, Component.text("Utility", NamedTextColor.GREEN)).without(ItemComponent.ATTRIBUTE_MODIFIERS),
                     List.of(
+                            ShopItem.constant("iron", ItemStack.of(Material.IRON_INGOT, 512), ItemStack.of(Material.AIR)),
+                            ShopItem.constant("gold", ItemStack.of(Material.GOLD_INGOT, 512), ItemStack.of(Material.AIR)),
+                            ShopItem.constant("diamond", ItemStack.of(Material.DIAMOND, 512), ItemStack.of(Material.AIR)),
+                            ShopItem.constant("emerald", ItemStack.of(Material.EMERALD, 512), ItemStack.of(Material.AIR))
                     )
             )
     );
@@ -91,7 +152,7 @@ public class ShopItems {
     /**
      * Maps a name into an (optional) shop item.
      */
-    public static @Nullable ShopItem nameToItem(@NotNull String name) {
+    public static @Nullable ShopItem.Generator nameToItem(@NotNull String name) {
         for (var tab : TABS) {
             for (var item : tab.items()) {
                 if (item.name().equals(name)) {
@@ -123,6 +184,7 @@ public class ShopItems {
         var shop = new ContainerInventory(InventoryType.CHEST_6_ROW, "Shopkeeper");
 
         shop.setTag(SHOP_INVENTORY, true);
+        shop.setTag(TAB_ID, tab);
 
         ItemStack empty = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE)
                 .with(ItemComponent.HIDE_TOOLTIP, Unit.INSTANCE);
@@ -152,7 +214,7 @@ public class ShopItems {
             if (tab.name().equals(current.name())) {
                 shop.setItemStack(i + 1 + 9,
                         ItemStack.of(Material.GREEN_STAINED_GLASS_PANE)
-                        .with(ItemComponent.HIDE_TOOLTIP, Unit.INSTANCE)
+                                .with(ItemComponent.HIDE_TOOLTIP, Unit.INSTANCE)
                 );
             }
 
@@ -160,36 +222,48 @@ public class ShopItems {
         }
 
         for (var item : tab.items()) {
-            shop.addItemStack(ShopItems.render(item, player));
+            ShopItem render = item.getter().apply(player);
+            if (render != null) {
+                shop.addItemStack(ShopItems.render(render).withTag(ITEM_ID, item));
+            }
         }
 
         return shop;
     }
 
     /**
-     * Renders a shop item for the provided player.
+     * Renders a shop item into an ItemStack.
      */
-    public static @NotNull ItemStack render(@NotNull ShopItem item, @NotNull Player player) {
-        return item.item().apply(player).with(ItemComponent.LORE, (UnaryOperator<List<Component>>) lore -> {
+    public static @NotNull ItemStack render(@NotNull ShopItem item) {
+        return item.item().with(ItemComponent.LORE, (UnaryOperator<List<Component>>) lore -> {
             lore = new ArrayList<>(lore);
             lore.add(Component.empty());
 
+            Material material = item.cost().material();
+            String amount = item.cost().amount() + " ";
             Component cost;
-            if (item.cost().material() == Material.IRON_INGOT) {
-                cost = Component.text(item.cost().amount() + " iron", NamedTextColor.WHITE);
-            } else if (item.cost().material() == Material.GOLD_INGOT) {
-                cost = Component.text(item.cost().amount() + " gold", NamedTextColor.GOLD);
-            } else if (item.cost().material() == Material.DIAMOND) {
-                cost = Component.text(item.cost().amount() + " diamonds", NamedTextColor.AQUA);
-            } else if (item.cost().material() == Material.EMERALD) {
-                cost = Component.text(item.cost().amount() + " emeralds", NamedTextColor.GREEN);
+
+            if (material == Material.IRON_INGOT) {
+                cost = Component.text(amount + "iron", NamedTextColor.WHITE);
+            } else if (material == Material.GOLD_INGOT) {
+                cost = Component.text(amount + "gold", NamedTextColor.GOLD);
+            } else if (material == Material.DIAMOND) {
+                cost = Component.text(amount + "diamonds", NamedTextColor.AQUA);
+            } else if (material == Material.EMERALD) {
+                cost = Component.text(amount + "emeralds", NamedTextColor.GREEN);
+            } else if (material == Material.BARRIER) {
+                cost = Component.text("This item cannot be bought!", NamedTextColor.RED);
+            } else if (material.isBlock()) {
+                cost = Component.text(amount, NamedTextColor.GRAY).append(Component.translatable("block.minecraft." + item.cost().material().block().namespace().path()));
+            } else if (material == Material.AIR) {
+                cost = Component.text("Free!", NamedTextColor.GREEN);
             } else {
-                cost = Component.text(item.cost().amount() + String.valueOf(item.cost().material()), NamedTextColor.GRAY);
+                cost = Component.text(amount, NamedTextColor.GRAY).append(Component.translatable("item.minecraft." + item.cost().material().namespace().path()));
             }
 
             lore.add(Component.text("Cost: ").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY).append(cost));
             return lore;
-        }).withTag(ITEM_ID, item);
+        });
     }
 
 }
