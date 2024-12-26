@@ -186,8 +186,7 @@ public class ShopItems {
         shop.setTag(SHOP_INVENTORY, true);
         shop.setTag(TAB_ID, tab);
 
-        ItemStack empty = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE)
-                .with(ItemComponent.HIDE_TOOLTIP, Unit.INSTANCE);
+        ItemStack empty = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE).with(ItemComponent.HIDE_TOOLTIP);
 
         // Top and bottom
         for (int i = 0; i < 9; i++) {
@@ -204,17 +203,19 @@ public class ShopItems {
 
         Component lore = Component.text("Click to view!", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false);
 
+        // Add the tabs to the top of the page
         for (int i = 0; i < TABS.size(); i++) {
             ShopItem.Tab current = TABS.get(i);
 
+            // Link to each other tab
             ItemStack item = current.icon()
                     .with(ItemComponent.LORE, List.of(lore))
                     .withTag(TAB_ID, current);
 
+            // Special item for the current tab
             if (tab.name().equals(current.name())) {
                 shop.setItemStack(i + 1 + 9,
-                        ItemStack.of(Material.GREEN_STAINED_GLASS_PANE)
-                                .with(ItemComponent.HIDE_TOOLTIP, Unit.INSTANCE)
+                        ItemStack.of(Material.GREEN_STAINED_GLASS_PANE).with(ItemComponent.HIDE_TOOLTIP)
                 );
             }
 
@@ -236,6 +237,7 @@ public class ShopItems {
      */
     public static @NotNull ItemStack render(@NotNull ShopItem item) {
         return item.item().with(ItemComponent.LORE, (UnaryOperator<List<Component>>) lore -> {
+            // Copy the lore and make space for the cost
             lore = new ArrayList<>(lore);
             lore.add(Component.empty());
 
