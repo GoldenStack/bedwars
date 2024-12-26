@@ -10,6 +10,7 @@ import dev.goldenstack.bedwars.team.Teams;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
@@ -22,11 +23,14 @@ import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.event.item.ItemDropEvent;
 import net.minestom.server.event.item.PickupItemEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
+import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.inventory.AbstractInventory;
+import net.minestom.server.inventory.Inventory;
+import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.inventory.TransactionOption;
 import net.minestom.server.inventory.click.ClickType;
 import net.minestom.server.item.ItemComponent;
@@ -76,6 +80,9 @@ public class Game {
 
     private final @NotNull Map<Team, Set<UUID>> teams;
 
+    private final @NotNull Map<Team, Inventory> teamStorage;
+    private final @NotNull Map<BlockVec, Inventory> worldStorage;
+
     private State state;
 
     public Game(@NotNull BedwarsMap map) {
@@ -87,6 +94,11 @@ public class Game {
 
         this.teams = new HashMap<>();
         aliveTeams.forEach(team -> teams.put(team, new HashSet<>()));
+
+        teamStorage = new HashMap<>();
+        aliveTeams.forEach(team -> teamStorage.put(team, new Inventory(InventoryType.CHEST_3_ROW, "Team Storage")));
+
+        worldStorage = new HashMap<>();
 
         GAMES.put(uuid, this);
         instance.setTag(GAME, this);
@@ -267,6 +279,23 @@ public class Game {
             itemEntity.setPickupDelay(Duration.of(10, TimeUnit.SERVER_TICK));
             itemEntity.setVelocity(event.getPlayer().getPosition().direction().mul(6));
             itemEntity.setInstance(event.getPlayer().getInstance(), event.getPlayer().getPosition().add(0, event.getPlayer().getEyeHeight() * 0.75, 0));
+        }).addListener(PlayerBlockInteractEvent.class, event -> {
+            Block block = event.getBlock();
+            Player player = event.getPlayer();
+
+            Team team = player.getTag(Teams.TEAM);
+            if (team == null) return;
+
+            if (block.compare(Block.ENDER_CHEST)) {
+                // Open the team inventory for the player
+
+                player.openInventory(teamStorage.get(team));
+            } else if (block.compare(Block.CHEST)) {
+                // Open the stored block inventory for the player
+
+                Inventory chest = worldStorage.computeIfAbsent(event.getBlockPosition(), _ -> new Inventory(InventoryType.CHEST_3_ROW, "Chest"));
+                player.openInventory(chest);
+            }
         });
 
         MinecraftServer.getGlobalEventHandler().addListener(InventoryPreClickEvent.class, event -> {
