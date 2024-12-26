@@ -82,6 +82,13 @@ public record ShopItem(@NotNull ItemStack item, @NotNull ItemStack cost, @NotNul
                 newTiers.put(name, currentTier + 1);
                 player.setTag(ShopItems.ITEM_TIERS, newTiers);
 
+                if (currentTier > 0) {
+                    // Take the previous item from the player
+                    ItemStack previousItem = tierItems.get(currentTier - 1).item;
+
+                    player.getInventory().takeItemStack(previousItem, TransactionOption.ALL);
+                }
+
                 original.boughtTrigger.accept(p);
             });
         });
