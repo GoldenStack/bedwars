@@ -176,7 +176,7 @@ public class Game {
 
         int pickaxe = itemTiers.getOrDefault("pickaxe", 0);
         if (pickaxe > 0) {
-            ShopItems.PICKAXES.get(axe - 1).boughtTrigger().accept(player);
+            ShopItems.PICKAXES.get(pickaxe - 1).boughtTrigger().accept(player);
         }
 
         // Apply armor
