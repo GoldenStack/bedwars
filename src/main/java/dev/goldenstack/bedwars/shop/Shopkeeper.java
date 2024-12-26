@@ -56,7 +56,7 @@ public class Shopkeeper extends LivingEntity {
 
         this.npcEventNode.addListener(PlayerEntityInteractEvent.class, event -> {
             if (event.getTarget() != this) return;
-            if (event.getHand() != Player.Hand.MAIN) return; // event fired for both hands, only process one.
+            if (event.getHand() != PlayerHand.MAIN) return; // event fired for both hands, only process one.
 
             handler.accept(event.getPlayer());
         }).addListener(EntityAttackEvent.class, event -> {
@@ -73,7 +73,7 @@ public class Shopkeeper extends LivingEntity {
         if (this.skin != null) {
             properties.add(new PlayerInfoUpdatePacket.Property("textures", skin.textures(), skin.signature()));
         }
-        var entry = new PlayerInfoUpdatePacket.Entry(super.getUuid(), username, properties, false, 0, GameMode.SURVIVAL, null, null);
+        var entry = new PlayerInfoUpdatePacket.Entry(super.getUuid(), username, properties, false, 0, GameMode.SURVIVAL, null, null, 0);
         player.sendPacket(new PlayerInfoUpdatePacket(PlayerInfoUpdatePacket.Action.ADD_PLAYER, entry));
 
         // Spawn the player entity

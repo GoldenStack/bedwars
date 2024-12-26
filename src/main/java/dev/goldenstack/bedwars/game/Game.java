@@ -26,8 +26,9 @@ import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.inventory.AbstractInventory;
 import net.minestom.server.inventory.TransactionOption;
-import net.minestom.server.inventory.click.Click;
+import net.minestom.server.inventory.click.ClickType;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
@@ -96,7 +97,7 @@ public class Game {
 
         for (var position : map.shopkeepers()) {
             Shopkeeper shopkeeper = new Shopkeeper("Shopkeeper", SKIN, false,
-                    player -> player.openInventory(ShopItems.renderInventory(ShopItems.TABS.get(0), player)));
+                    player -> player.openInventory(ShopItems.renderInventory(ShopItems.TABS.getFirst(), player)));
             shopkeeper.setInstance(instance, position);
         }
     }
@@ -109,7 +110,7 @@ public class Game {
     public void handlePlayerAdd(@NotNull Player player) {
         Set<Player> players = instance.getPlayers();
 
-        if (players.size() >= 1 && state == State.LOBBY) {
+        if (!players.isEmpty() && state == State.LOBBY) {
             this.state = State.START;
             for (Player user : players) {
                 // Results in incorrect team distribution
@@ -269,27 +270,25 @@ public class Game {
         });
 
         MinecraftServer.getGlobalEventHandler().addListener(InventoryPreClickEvent.class, event -> {
-            if (!event.getInventory().hasTag(ShopItems.SHOP_INVENTORY)) return;
-            if (event.getPlayer().getTag(GAME) != this) return;
-
+            AbstractInventory inventory = event.getInventory();
             Player player = event.getPlayer();
+
+            // Check that this is actually a shop click
+            if (inventory == null || !inventory.hasTag(ShopItems.SHOP_INVENTORY)) return;
+            if (player.getTag(GAME) != this) return;
 
             event.setCancelled(true);
 
-            int slot = switch (event.getClickInfo()) {
-                case Click.Info.Left(int s) -> s;
-                case Click.Info.LeftShift(int s) -> s;
-                case Click.Info.Right(int s) -> s;
-                case Click.Info.RightShift(int s) -> s;
-                default -> -1;
-            };
+            ClickType type = event.getClickType();
+            boolean acceptedClick = type == ClickType.LEFT_CLICK || type == ClickType.RIGHT_CLICK || type == ClickType.SHIFT_CLICK;
+            int slot = event.getSlot();
 
             // Limit the click to only slots within the shop
-            if (slot == -1 || slot >= event.getInventory().getSize()) return;
+            if (!acceptedClick || slot >= inventory.getSize()) return;
 
-            ShopItem.Generator item = event.getInventory().getItemStack(slot).getTag(ShopItems.ITEM_ID);
+            ShopItem.Generator item = inventory.getItemStack(slot).getTag(ShopItems.ITEM_ID);
             if (item == null) {
-                ShopItem.Tab tab = event.getInventory().getItemStack(slot).getTag(ShopItems.TAB_ID);
+                ShopItem.Tab tab = inventory.getItemStack(slot).getTag(ShopItems.TAB_ID);
                 if (tab != null) {
                     player.openInventory(ShopItems.renderInventory(tab, player));
                 }
@@ -305,7 +304,7 @@ public class Game {
             }
 
             // Update inventory by reopening
-            player.openInventory(ShopItems.renderInventory(event.getInventory().getTag(ShopItems.TAB_ID), player));
+            player.openInventory(ShopItems.renderInventory(inventory.getTag(ShopItems.TAB_ID), player));
         });
 
     }

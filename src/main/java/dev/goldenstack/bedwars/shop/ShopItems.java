@@ -5,7 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.Player;
-import net.minestom.server.inventory.ContainerInventory;
+import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
@@ -180,8 +180,8 @@ public class ShopItems {
     /**
      * Renders the shop inventory for a given player.
      */
-    public static @NotNull ContainerInventory renderInventory(@NotNull ShopItem.Tab tab, @NotNull Player player) {
-        var shop = new ContainerInventory(InventoryType.CHEST_6_ROW, "Shopkeeper");
+    public static @NotNull Inventory renderInventory(@NotNull ShopItem.Tab tab, @NotNull Player player) {
+        Inventory shop = new Inventory(InventoryType.CHEST_6_ROW, "Shopkeeper");
 
         shop.setTag(SHOP_INVENTORY, true);
         shop.setTag(TAB_ID, tab);
