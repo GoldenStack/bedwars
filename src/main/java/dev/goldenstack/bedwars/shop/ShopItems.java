@@ -56,11 +56,11 @@ public class ShopItems {
                     "blocks",
                     ItemStack.of(Material.TERRACOTTA).with(ItemComponent.ITEM_NAME, Component.text("Blocks", NamedTextColor.GREEN)),
                     List.of(
-                            ShopItem.team("wool", team -> ItemStack.of(Teams.data(team).wool(), 16), ItemStack.of(Material.IRON_INGOT, 4)),
-                            ShopItem.team("concrete", team -> ItemStack.of(Teams.data(team).concrete(), 16), ItemStack.of(Material.IRON_INGOT, 12)),
+                            ShopItem.team("wool", team -> ItemStack.of(team.data().wool(), 16), ItemStack.of(Material.IRON_INGOT, 4)),
+                            ShopItem.team("concrete", team -> ItemStack.of(team.data().concrete(), 16), ItemStack.of(Material.IRON_INGOT, 12)),
                             ShopItem.constant("wood", ItemStack.of(Material.OAK_PLANKS, 16), ItemStack.of(Material.GOLD_INGOT, 4)),
                             ShopItem.constant("end_stone", ItemStack.of(Material.END_STONE, 12), ItemStack.of(Material.IRON_INGOT, 24)),
-                            ShopItem.team("glass", team -> ItemStack.of(Teams.data(team).glass(), 4), ItemStack.of(Material.IRON_INGOT, 12)),
+                            ShopItem.team("glass", team -> ItemStack.of(team.data().glass(), 4), ItemStack.of(Material.IRON_INGOT, 12)),
                             ShopItem.constant("ladder", ItemStack.of(Material.LADDER, 16), ItemStack.of(Material.IRON_INGOT, 12)),
                             ShopItem.constant("obsidian", ItemStack.of(Material.OBSIDIAN, 4), ItemStack.of(Material.EMERALD, 4))
                     )

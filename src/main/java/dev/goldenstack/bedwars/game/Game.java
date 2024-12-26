@@ -168,7 +168,7 @@ public class Game {
         }
 
         // Apply armor
-        DyedItemColor color = new DyedItemColor(Teams.data(team).color());
+        DyedItemColor color = new DyedItemColor(team.data().color());
 
         player.setHelmet(ItemStack.of(Material.LEATHER_HELMET).with(ItemComponent.DYED_COLOR, color));
         player.setChestplate(ItemStack.of(Material.LEATHER_CHESTPLATE).with(ItemComponent.DYED_COLOR, color));
@@ -219,9 +219,9 @@ public class Game {
                 }
 
                 instance.sendMessage(Component.textOfChildren(
-                        Component.text(Teams.data(team).name() + " Team's bed", Teams.data(team).color()),
+                        Component.text(team.data().name() + " Team's bed", team.data().color()),
                         Component.text(" was destroyed by "),
-                        Component.text(Teams.data(playerTeam).name() + " Team", Teams.data(playerTeam).color())
+                        Component.text(playerTeam.data().name() + " Team", playerTeam.data().color())
                 ));
 
                 aliveTeams.remove(team);
